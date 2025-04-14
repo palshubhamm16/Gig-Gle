@@ -1,0 +1,58 @@
+# Root-level node_modules (if accidentally installed here)
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+.env.*.local
+
+# Dependency directories
+/frontend/node_modules/
+/backend/node_modules/
+
+# Build outputs
+/frontend/.next/
+/frontend/out/
+/frontend/dist/
+/backend/dist/
+/backend/build/
+/backend/.turbo/
+
+# Next.js
+/frontend/.next/
+/frontend/.vercel/
+
+# Coverage / testing
+coverage/
+*.lcov
+
+# Optional: ignore database files
+*.sqlite
+*.sqlite3
+*.db
+
+# Cloudinary temp files (if applicable)
+tmp/
+temp/
+
+# TypeScript cache
+**/.tsbuildinfo
+
+# Optional: ignore uploads if stored locally in dev
+/backend/uploads/
