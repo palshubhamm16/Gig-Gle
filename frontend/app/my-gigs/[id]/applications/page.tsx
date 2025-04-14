@@ -3,7 +3,14 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { currentUser } from "@clerk/nextjs/server"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -13,7 +20,7 @@ import {
   CheckCircle,
   XCircle,
   Download,
-  Calendar
+  Calendar,
 } from "lucide-react"
 
 export const metadata: Metadata = {
@@ -50,7 +57,10 @@ export default async function ReviewApplicationsPage({ params }: { params: { id:
   return (
     <div className="container px-4 md:px-6 py-6 md:py-10">
       <div className="max-w-4xl mx-auto">
-        <Link href="/my-gigs" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors w-fit mb-6">
+        <Link
+          href="/my-gigs"
+          className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors w-fit mb-6"
+        >
           <ArrowLeft className="h-4 w-4" />
           <span>Back to My Gigs</span>
         </Link>
@@ -108,8 +118,7 @@ function ApplicationList({ applications, emptyMsg }: { applications: any[]; empt
 }
 
 function ApplicationCard({ application }: { application: any }) {
-  const applicantName = application.seeker?.name || "Unnamed Seeker"
-  const location = application.seeker?.location || "Unknown Location"
+  const applicantName = application.name || "Unnamed Seeker"
 
   return (
     <Card>
@@ -122,7 +131,7 @@ function ApplicationCard({ application }: { application: any }) {
             </Avatar>
             <div>
               <CardTitle className="text-lg">{applicantName}</CardTitle>
-              <CardDescription>{location}</CardDescription>
+              <CardDescription>{application.seeker}</CardDescription>
             </div>
           </div>
           <div className="flex flex-col items-end gap-1">

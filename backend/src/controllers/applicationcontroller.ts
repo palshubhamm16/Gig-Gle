@@ -5,11 +5,11 @@ import mongoose from "mongoose";
 
 export const createApplication = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { gig, coverLetter, accommodationNeeded } = req.body;
+    const { gig, name, coverLetter, accommodationNeeded } = req.body;
     const resumeFile = req.file;
     const seekerId = req.headers["user-id"] as string;
 
-    if (!resumeFile || !gig || !seekerId) {
+    if (!resumeFile || !gig || !seekerId || !name) {
       res.status(400).json({ error: "Missing required fields." });
       return;
     }
@@ -32,6 +32,7 @@ export const createApplication = async (req: Request, res: Response): Promise<vo
     const application = new Application({
       seeker: seekerId,
       gig,
+      name,
       pdf: result.secure_url,
       coverLetter: coverLetter || "No cover letter provided.",
       accommodationNeeded: accommodationNeeded || "No accommodation needed.",

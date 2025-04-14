@@ -23,6 +23,7 @@ export function ApplyForm({ gigId, gigTitle }: ApplyFormProps) {
   const { toast } = useToast()
 
   const [resume, setResume] = useState<File | null>(null)
+  const [name, setName] = useState("")
   const [coverLetter, setCoverLetter] = useState("")
   const [accommodation, setAccommodation] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -52,12 +53,22 @@ export function ApplyForm({ gigId, gigTitle }: ApplyFormProps) {
       return
     }
 
+    if (!name.trim()) {
+      toast({
+        title: "Missing Name",
+        description: "Please enter your full name.",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
       const formData = new FormData()
       formData.append("resume", resume)
       formData.append("gig", gigId)
+      formData.append("name", name.trim())
       formData.append("coverLetter", coverLetter || "No cover letter provided.")
       formData.append("accommodationNeeded", accommodation || "No accommodation needed.")
 
@@ -113,6 +124,17 @@ export function ApplyForm({ gigId, gigTitle }: ApplyFormProps) {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Full Name</Label>
+            <Input
+              id="name"
+              placeholder="Enter your full name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="resume">Resume (PDF)</Label>
             <Input

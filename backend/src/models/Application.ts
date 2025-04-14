@@ -2,6 +2,7 @@ import mongoose, { Schema, Document, Types } from "mongoose";
 
 export interface IApplication extends Document {
   seeker: string;
+  name: string; // Full name of the applicant
   gig: Types.ObjectId;
   coverLetter?: string;
   pdf?: string; // Cloudinary PDF URL
@@ -19,6 +20,7 @@ export interface IApplication extends Document {
 const ApplicationSchema: Schema<IApplication> = new Schema<IApplication>(
   {
     seeker: { type: String, required: true }, // Clerk user ID
+    name: { type: String, required: true },   // New field for applicant's name
     gig: { type: Schema.Types.ObjectId, ref: "Gig", required: true },
     coverLetter: { type: String },
     pdf: { type: String }, // CV stored in Cloudinary
