@@ -50,11 +50,14 @@ const featuredGigs = [
 
 export function FeaturedGigs() {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
       {featuredGigs.map((gig) => (
-        <Card key={gig.id} className="flex flex-col">
+        <Card
+          key={gig.id}
+          className="flex flex-col h-full transition-all hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800"
+        >
           <CardContent className="flex-1 pt-6">
-            <div className="flex items-start justify-between mb-2">
+            <div className="flex items-start justify-between mb-3">
               <div className="flex flex-col">
                 <h3 className="font-semibold text-lg">{gig.title}</h3>
                 <div className="flex items-center gap-1 text-muted-foreground text-sm">
@@ -64,6 +67,7 @@ export function FeaturedGigs() {
               </div>
               <Badge
                 variant={gig.type === "Part-time" ? "default" : gig.type === "Internship" ? "secondary" : "outline"}
+                className={gig.type === "Part-time" ? "bg-blue-600 hover:bg-blue-700" : ""}
               >
                 {gig.type}
               </Badge>
@@ -86,7 +90,10 @@ export function FeaturedGigs() {
           </CardContent>
           <CardFooter className="pt-2">
             <Link href={`/gigs/${gig.id}`} className="w-full">
-              <Button variant="outline" className="w-full">
+              <Button
+                variant="outline"
+                className="w-full hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 dark:hover:border-blue-800"
+              >
                 View Details
               </Button>
             </Link>

@@ -229,7 +229,7 @@ function ApplicationCard({ application, onScheduleClick }: { application: any; o
                 Resume
               </Button>
             </a>
-          )}
+          )}   
 
           <Link href={`/chat?applicant=${application.seeker}`} className="flex-1">
             <Button variant="outline" size="sm" className="w-full gap-1">
