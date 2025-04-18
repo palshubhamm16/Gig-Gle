@@ -74,7 +74,8 @@ export default function ApplicationsPage() {
       type: app.gig.type,
       appliedAt: formatDate(app.appliedAt),
       status,
-      interviewDate: app.interviewDate ? formatDate(app.interviewDate) : undefined,
+      interviewDate: app.interview?.date ? formatDate(app.interview.date) : undefined,
+      interviewMessage: app.interview?.message,
       startDate: app.startDate ? formatDate(app.startDate) : undefined,
     }
   }
@@ -155,9 +156,15 @@ export default function ApplicationsPage() {
                           <span>Applied on {application.appliedAt}</span>
                         </div>
                         {application.status === "interview" && application.interviewDate && (
-                          <div className="flex items-center gap-1 text-sm font-medium">
-                            <Clock3 className="h-3 w-3" />
+                          <div className="flex justify-center items-center bg-green-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg text-center">
+                            <Clock3 className="h-4 w-4 mr-2" />
                             <span>Interview on {application.interviewDate}</span>
+                          </div>
+                        )}
+                        {application.status === "interview" && application.interviewMessage && (
+                          <div className="flex justify-center items-center mt-4 text-white font-semibold bg-green-700 p-3 rounded-lg text-center">
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            <span>{application.interviewMessage}</span>
                           </div>
                         )}
                       </div>
@@ -243,19 +250,6 @@ export default function ApplicationsPage() {
                             View Gig
                           </Button>
                         </Link>
-                        {application.status === "accepted" && (
-                          <Button variant="default" size="sm" className="flex-1 gap-1">
-                            <MessageCircle className="h-4 w-4" />
-                            Message
-                          </Button>
-                        )}
-                        {application.status === "rejected" && (
-                          <Link href="/gigs" className="flex-1">
-                            <Button variant="default" size="sm" className="w-full">
-                              Find Similar Gigs
-                            </Button>
-                          </Link>
-                        )}
                       </div>
                     </CardFooter>
                   </Card>
