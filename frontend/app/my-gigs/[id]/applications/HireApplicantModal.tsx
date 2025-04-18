@@ -52,7 +52,12 @@ export default function HireApplicantModal({
         <div className="space-y-4">
           <div>
             <Label>Start Date</Label>
-            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            <Input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              min={new Date().toISOString().split("T")[0]} // Disable past dates
+            />
           </div>
         </div>
 

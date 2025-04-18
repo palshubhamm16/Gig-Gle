@@ -159,3 +159,32 @@ export const getGigApplications = async (req: Request, res: Response): Promise<v
     }
   };
   
+
+  //hire applicant
+  export const hireApplicant = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { applicationId } = req.params;
+      const { startDate } = req.body;
+  
+      const application = await Application.findById(applicationId);
+  
+      if (!application) {
+        res.status(404).json({ message: 'Application not found' });
+        return;
+      }
+  
+      application.status = 'hired';
+      application.startDate = startDate;
+  
+      await application.save();
+  
+      res.status(200).json({
+        message: 'Applicant hired successfully',
+        application,
+      });
+    } catch (error) {
+      console.error('Error hiring applicant:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+  
