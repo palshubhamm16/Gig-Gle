@@ -85,7 +85,7 @@ export default function ApplicationsPage() {
     .map(transformApplication)
 
   const completedApplications = applications
-    .filter((app) => app.status === "accepted" || app.status === "rejected")
+    .filter((app) => app.status === "hired" || app.status === "rejected")
     .map(transformApplication)
 
   return (
@@ -210,9 +210,12 @@ export default function ApplicationsPage() {
                             <span>{application.company}</span>
                           </CardDescription>
                         </div>
-                        <Badge variant={application.status === "accepted" ? "default" : "destructive"}>
-                          {application.status === "accepted" ? "Accepted" : "Rejected"}
-                        </Badge>
+                        <Badge
+                        variant={application.status === "hired" ? "outline" : "destructive"}
+                       className={application.status === "hired" ? "bg-green-500 text-white" : ""}
+                      >
+                      {application.status === "hired" ? "Hired" : "Rejected"}
+                      </Badge>
                       </div>
                     </CardHeader>
                     <CardContent className="pb-2">
@@ -229,7 +232,7 @@ export default function ApplicationsPage() {
                           <Clock className="h-3 w-3" />
                           <span>Applied on {application.appliedAt}</span>
                         </div>
-                        {application.status === "accepted" && application.startDate && (
+                        {application.status === "hired" && application.startDate && (
                           <div className="flex items-center gap-1 text-sm font-medium text-green-600 dark:text-green-500">
                             <CheckCircle className="h-3 w-3" />
                             <span>Start date: {application.startDate}</span>
