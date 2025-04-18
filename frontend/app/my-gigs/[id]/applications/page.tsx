@@ -1,7 +1,8 @@
-import type { Metadata } from "next"
-import { redirect } from "next/navigation"
+"use client"
+
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { currentUser } from "@clerk/nextjs/server"
+import { useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -22,45 +23,49 @@ import {
   Download,
   Calendar,
 } from "lucide-react"
+import { format } from "date-fns"
+import ScheduleInterviewModal from "./ScheduleInterviewModal" // We'll define this below
 
-export const metadata: Metadata = {
-  title: "Review Applications | Gig-gle",
-  description: "Review applications for your posted gig",
-}
+export default function ReviewApplicationsClientPage() {
+  const [applications, setApplications] = useState<any[]>([])
+  const [selectedAppId, setSelectedAppId] = useState<string | null>(null)
+  const [showModal, setShowModal] = useState(false)
 
-async function fetchApplicationsByGigId(gigId: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/gig/${gigId}`, {
-    cache: "no-store",
-  })
+  const params = useParams()
+  const gigId = params?.id as string
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch applications")
+  const fetchApplications = async () => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/gig/${gigId}`, {
+      cache: "no-store",
+    })
+    const data = await res.json()
+    setApplications(data)
   }
 
-  return res.json()
-}
+  useEffect(() => {
+    fetchApplications()
+  }, [])
 
-export default async function ReviewApplicationsPage({ params }: { params: { id: string } }) {
-  const user = await currentUser()
-  if (!user) {
-    redirect("/sign-in?redirect_url=/my-gigs")
+  const handleScheduleClick = (appId: string) => {
+    setSelectedAppId(appId)
+    setShowModal(true)
   }
 
-  const gigId = params.id
-  const applications = await fetchApplicationsByGigId(gigId)
+  const closeModal = () => {
+    setSelectedAppId(null)
+    setShowModal(false)
+    fetchApplications()
+  }
 
-  const appliedApplications = applications.filter((app: any) => app.status === "applied")
-  const interviewApplications = applications.filter((app: any) => app.status === "interview")
-  const hiredApplications = applications.filter((app: any) => app.status === "hired")
-  const rejectedApplications = applications.filter((app: any) => app.status === "rejected")
+  const appliedApplications = applications.filter((a) => a.status === "applied")
+  const interviewApplications = applications.filter((a) => a.status === "interview")
+  const hiredApplications = applications.filter((a) => a.status === "hired")
+  const rejectedApplications = applications.filter((a) => a.status === "rejected")
 
   return (
     <div className="container px-4 md:px-6 py-6 md:py-10">
       <div className="max-w-4xl mx-auto">
-        <Link
-          href="/my-gigs"
-          className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors w-fit mb-6"
-        >
+        <Link href="/my-gigs" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors w-fit mb-6">
           <ArrowLeft className="h-4 w-4" />
           <span>Back to My Gigs</span>
         </Link>
@@ -81,56 +86,60 @@ export default async function ReviewApplicationsPage({ params }: { params: { id:
           </TabsList>
 
           <TabsContent value="applied">
-            <ApplicationList applications={appliedApplications} emptyMsg="No applied applications" />
+            <ApplicationList applications={appliedApplications} onScheduleClick={handleScheduleClick} />
           </TabsContent>
           <TabsContent value="interview">
-            <ApplicationList applications={interviewApplications} emptyMsg="No interviews scheduled" />
+            <ApplicationList applications={interviewApplications} onScheduleClick={handleScheduleClick} />
           </TabsContent>
           <TabsContent value="hired">
-            <ApplicationList applications={hiredApplications} emptyMsg="No hired applicants yet" />
+            <ApplicationList applications={hiredApplications} />
           </TabsContent>
           <TabsContent value="rejected">
-            <ApplicationList applications={rejectedApplications} emptyMsg="No rejected applications" />
+            <ApplicationList applications={rejectedApplications} />
           </TabsContent>
         </Tabs>
       </div>
+
+      {showModal && selectedAppId && (
+        <ScheduleInterviewModal applicationId={selectedAppId} onClose={closeModal} />
+      )}
     </div>
   )
 }
 
-function ApplicationList({ applications, emptyMsg }: { applications: any[]; emptyMsg: string }) {
+function ApplicationList({ applications, onScheduleClick }: { applications: any[]; onScheduleClick?: (id: string) => void }) {
   if (applications.length === 0) {
     return (
       <div className="text-center py-12">
-        <h3 className="text-lg font-medium mb-2">{emptyMsg}</h3>
-        <p className="text-muted-foreground">You don't have any applications in this category.</p>
+        <h3 className="text-lg font-medium mb-2">No applications found</h3>
+        <p className="text-muted-foreground">No applicants in this tab.</p>
       </div>
     )
   }
 
   return (
     <div className="grid gap-6">
-      {applications.map((application) => (
-        <ApplicationCard key={application._id} application={application} />
+      {applications.map((app) => (
+        <ApplicationCard key={app._id} application={app} onScheduleClick={onScheduleClick} />
       ))}
     </div>
   )
 }
 
-function ApplicationCard({ application }: { application: any }) {
-  const applicantName = application.name || "Unnamed Seeker"
+function ApplicationCard({ application, onScheduleClick }: { application: any; onScheduleClick?: (id: string) => void }) {
+  const status = application.status
 
   return (
     <Card>
       <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-3">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={application.avatar || "/placeholder.svg"} alt={applicantName} />
-              <AvatarFallback>{applicantName?.[0]}</AvatarFallback>
+        <div className="flex justify-between">
+          <div className="flex gap-3">
+            <Avatar>
+              <AvatarImage src={application.avatar || "/placeholder.svg"} alt={application.name || "Unnamed Seeker"} />
+              <AvatarFallback>{application.name?.[0]}</AvatarFallback>
             </Avatar>
             <div>
-              <CardTitle className="text-lg">{applicantName}</CardTitle>
+              <CardTitle className="text-lg">{application.name || "Unnamed Seeker"}</CardTitle>
               <CardDescription>{application.seeker}</CardDescription>
             </div>
           </div>
@@ -170,9 +179,7 @@ function ApplicationCard({ application }: { application: any }) {
 
           <div>
             <h3 className="text-sm font-medium mb-1">Accommodations Needed</h3>
-            <p className="text-sm text-muted-foreground">
-              {application.accommodationNeeded || "None specified"}
-            </p>
+            <p className="text-sm text-muted-foreground">{application.accommodationNeeded || "None specified"}</p>
           </div>
 
           {/* New Fields */}
@@ -231,26 +238,36 @@ function ApplicationCard({ application }: { application: any }) {
             </Button>
           </Link>
 
-          {application.status === "applied" && (
-            <>
-              <Button variant="default" size="sm" className="flex-1 gap-1">
-                <Calendar className="h-4 w-4" />
-                Schedule Interview
-              </Button>
-              <Button variant="outline" size="sm" className="flex-1 gap-1">
-                <XCircle className="h-4 w-4" />
-                Reject
-              </Button>
-            </>
+          {onScheduleClick && (
+            <Button
+              variant="secondary"
+              size="sm"
+              className="w-full gap-1"
+              onClick={() => onScheduleClick(application._id)}
+            >
+              <Calendar className="h-4 w-4" />
+              Schedule Interview
+            </Button>
           )}
 
-          {application.status === "interview" && (
+          {application.status === "applied" && (
             <>
-              <Button variant="default" size="sm" className="flex-1 gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full gap-1"
+                onClick={() => alert(`Hiring applicant ${application.name}`)} // Replace with hire logic
+              >
                 <CheckCircle className="h-4 w-4" />
                 Hire
               </Button>
-              <Button variant="outline" size="sm" className="flex-1 gap-1">
+
+              <Button
+                variant="destructive"
+                size="sm"
+                className="w-full gap-1"
+                onClick={() => alert(`Rejecting applicant ${application.name}`)} // Replace with reject logic
+              >
                 <XCircle className="h-4 w-4" />
                 Reject
               </Button>

@@ -120,30 +120,42 @@ export const getGigApplications = async (req: Request, res: Response): Promise<v
   // @route   PATCH /api/applications/schedule-interview
   // @access  Private (should be protected ideally)
   export const scheduleInterview = async (req: Request, res: Response): Promise<void> => {
-    const { applicationId, interviewDate, message } = req.body;
+    const { applicationId } = req.params;  // Get applicationId from the URL parameters
+    const { interviewDate, message } = req.body;
+  
+    console.log('Scheduling interview for:', { applicationId, interviewDate, message });
   
     if (!applicationId || !interviewDate || !message) {
-      res.status(400);
-      throw new Error("Missing required fields");
+      res.status(400).json({ error: "Missing required fields" });
+      return;
     }
   
     const application = await Application.findById(applicationId);
     if (!application) {
-      res.status(404);
-      throw new Error("Application not found");
+      res.status(404).json({ error: "Application not found" });
+      return;
     }
   
+    // Log before updating
+    console.log('Found application:', application);
+  
+    // Update application status and interview details
     application.status = "interview";
     application.interview = {
       date: new Date(interviewDate),
       message,
     };
   
-    await application.save();
-  
-    res.status(200).json({
-      message: "Interview scheduled successfully",
-      application,
-    });
+    try {
+      await application.save();
+      console.log('Application updated:', application);  // Log updated application
+      res.status(200).json({
+        message: "Interview scheduled successfully",
+        application,
+      });
+    } catch (error) {
+      console.error('Error saving application:', error);
+      res.status(500).json({ error: "Failed to save interview details" });
+    }
   };
   
