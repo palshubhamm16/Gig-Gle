@@ -81,8 +81,8 @@ export default async function MyGigsPage() {
   const withStatus = gigs.map((gig) => ({
     ...gig,
     status: "active", // you could update this logic later
-    applicationsCount: Math.floor(Math.random() * 15),
-    newApplications: Math.floor(Math.random() * 5),
+    applicationsCount: gig.applicationsCount ?? 0,
+    newApplications: gig.newApplications ?? 0,
     postedAt: new Date(gig.createdAt).toLocaleDateString("en-US", {
       month: "long",
       day: "numeric",

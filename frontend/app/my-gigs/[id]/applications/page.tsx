@@ -160,6 +160,7 @@ function ApplicationCard({ application }: { application: any }) {
           </div>
         </div>
       </CardHeader>
+
       <CardContent className="pb-2">
         <div className="space-y-4">
           <div>
@@ -173,6 +174,28 @@ function ApplicationCard({ application }: { application: any }) {
               {application.accommodationNeeded || "None specified"}
             </p>
           </div>
+
+          {/* New Fields */}
+          {application.gender && (
+            <div>
+              <h3 className="text-sm font-medium mb-1">Gender</h3>
+              <p className="text-sm text-muted-foreground">{application.gender}</p>
+            </div>
+          )}
+
+          {application.age && (
+            <div>
+              <h3 className="text-sm font-medium mb-1">Age</h3>
+              <p className="text-sm text-muted-foreground">{application.age}</p>
+            </div>
+          )}
+
+          {application.disability && (
+            <div>
+              <h3 className="text-sm font-medium mb-1">Disability</h3>
+              <p className="text-sm text-muted-foreground">{application.disability}</p>
+            </div>
+          )}
 
           {application.status === "interview" && application.interview?.date && (
             <div className="flex items-center gap-1 text-sm font-medium">
@@ -189,6 +212,7 @@ function ApplicationCard({ application }: { application: any }) {
           )}
         </div>
       </CardContent>
+
       <CardFooter className="pt-2">
         <div className="flex flex-wrap gap-2 w-full">
           {application.pdf && (

@@ -5,7 +5,16 @@ import mongoose from "mongoose";
 
 export const createApplication = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { gig, name, coverLetter, accommodationNeeded } = req.body;
+    const {
+      gig,
+      name,
+      coverLetter,
+      accommodationNeeded,
+      age,
+      gender,
+      disabilityType,
+    } = req.body;
+
     const resumeFile = req.file;
     const seekerId = req.headers["user-id"] as string;
 
@@ -14,7 +23,6 @@ export const createApplication = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    // Upload PDF to Cloudinary (as 'raw' file)
     const result = await new Promise<any>((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {
@@ -33,6 +41,9 @@ export const createApplication = async (req: Request, res: Response): Promise<vo
       seeker: seekerId,
       gig,
       name,
+      age,
+      gender,
+      disabilityType,
       pdf: result.secure_url,
       coverLetter: coverLetter || "No cover letter provided.",
       accommodationNeeded: accommodationNeeded || "No accommodation needed.",
@@ -50,6 +61,7 @@ export const createApplication = async (req: Request, res: Response): Promise<vo
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 
 
@@ -100,3 +112,38 @@ export const getGigApplications = async (req: Request, res: Response): Promise<v
       res.status(500).json({ error: "Error fetching applications for gig" })
     }
   }
+
+  //schedule interview
+
+  
+  // @desc    Schedule interview for an application
+  // @route   PATCH /api/applications/schedule-interview
+  // @access  Private (should be protected ideally)
+  export const scheduleInterview = async (req: Request, res: Response): Promise<void> => {
+    const { applicationId, interviewDate, message } = req.body;
+  
+    if (!applicationId || !interviewDate || !message) {
+      res.status(400);
+      throw new Error("Missing required fields");
+    }
+  
+    const application = await Application.findById(applicationId);
+    if (!application) {
+      res.status(404);
+      throw new Error("Application not found");
+    }
+  
+    application.status = "interview";
+    application.interview = {
+      date: new Date(interviewDate),
+      message,
+    };
+  
+    await application.save();
+  
+    res.status(200).json({
+      message: "Interview scheduled successfully",
+      application,
+    });
+  };
+  

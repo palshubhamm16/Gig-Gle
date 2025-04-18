@@ -17,6 +17,22 @@ interface ApplyFormProps {
   gigTitle: string
 }
 
+const disabilityOptions = [
+  "Mobility Impairment",
+  "Visual Impairment",
+  "Hearing Impairment",
+  "Speech Impairment",
+  "Cognitive Disability",
+  "Learning Disability",
+  "Autism Spectrum Disorder",
+  "ADHD",
+  "Mental Health Condition",
+  "Chronic Illness",
+  "Neurological Disorder",
+  "Intellectual Disability",
+  "Multiple Disabilities",
+]
+
 export function ApplyForm({ gigId, gigTitle }: ApplyFormProps) {
   const { isSignedIn, user } = useUser()
   const router = useRouter()
@@ -26,6 +42,9 @@ export function ApplyForm({ gigId, gigTitle }: ApplyFormProps) {
   const [name, setName] = useState("")
   const [coverLetter, setCoverLetter] = useState("")
   const [accommodation, setAccommodation] = useState("")
+  const [disabilityType, setDisabilityType] = useState("")
+  const [age, setAge] = useState("")
+  const [gender, setGender] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,6 +90,9 @@ export function ApplyForm({ gigId, gigTitle }: ApplyFormProps) {
       formData.append("name", name.trim())
       formData.append("coverLetter", coverLetter || "No cover letter provided.")
       formData.append("accommodationNeeded", accommodation || "No accommodation needed.")
+      formData.append("disabilityType", disabilityType)
+      formData.append("age", age)
+      formData.append("gender", gender)
 
       await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/applications/`,
@@ -78,7 +100,7 @@ export function ApplyForm({ gigId, gigTitle }: ApplyFormProps) {
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            "user-id": user?.id || "", // Clerk user ID
+            "user-id": user?.id || "",
           },
         }
       )
@@ -133,6 +155,53 @@ export function ApplyForm({ gigId, gigTitle }: ApplyFormProps) {
               onChange={(e) => setName(e.target.value)}
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="age">Age</Label>
+            <Input
+              id="age"
+              type="number"
+              placeholder="Enter your age"
+              value={age}
+              onChange={(e) => setAge(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="gender">Gender</Label>
+            <select
+              id="gender"
+              className="w-full border rounded px-3 py-2 text-sm"
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+              required
+            >
+              <option value="">Select your gender</option>
+              <option value="Female">Female</option>
+              <option value="Male">Male</option>
+              <option value="Non-Binary">Non-Binary</option>
+              <option value="Prefer not to say">Prefer not to say</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="disabilityType">Disability Type</Label>
+            <select
+              id="disabilityType"
+              className="w-full border rounded px-3 py-2 text-sm"
+              value={disabilityType}
+              onChange={(e) => setDisabilityType(e.target.value)}
+              required
+            >
+              <option value="">Select your disability type</option>
+              {disabilityOptions.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="space-y-2">

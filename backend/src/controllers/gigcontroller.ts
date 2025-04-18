@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import Gig from "../models/Gig";
+import Application from "../models/Application";
+
 
 // Adjusted to fix Boolean parsing and required `type` field
 export const createGig = async (req: Request, res: Response): Promise<void> => {
@@ -83,13 +85,31 @@ export const getUserGigs = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    const gigs = await Gig.find({ userId }).sort({ createdAt: -1 });
-    res.status(200).json(gigs);
+    const gigs = await Gig.find({ userId }).sort({ createdAt: -1 }).lean();
+
+    const gigsWithApplicationCounts = await Promise.all(
+      gigs.map(async (gig) => {
+        const applicationsCount = await Application.countDocuments({ gig: gig._id });
+        const newApplications = await Application.countDocuments({
+          gig: gig._id,
+          status: "applied",
+        });
+
+        return {
+          ...gig,
+          applicationsCount,
+          newApplications,
+        };
+      })
+    );
+
+    res.status(200).json(gigsWithApplicationCounts);
   } catch (error) {
     console.error("Error fetching user's gigs:", error);
     res.status(500).json({ error: "Error fetching user's gigs" });
   }
 };
+
 
 
 export const getGigById = async (req: Request, res: Response): Promise<void> => {
