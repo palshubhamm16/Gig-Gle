@@ -32,6 +32,7 @@ export default function ReviewApplicationsClientPage() {
   const [showModal, setShowModal] = useState(false)
   const [showHireModal, setShowHireModal] = useState(false)
   const [loadingHire, setLoadingHire] = useState<string | null>(null)
+  const [loadingReject, setLoadingReject] = useState<string | null>(null)
 
   const params = useParams()
   const gigId = params?.id as string
@@ -56,6 +57,20 @@ export default function ReviewApplicationsClientPage() {
   const handleHireClick = (appId: string) => {
     setSelectedAppId(appId)
     setShowHireModal(true)
+  }
+
+  const handleRejectClick = async (appId: string) => {
+    setLoadingReject(appId)
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/reject/${appId}`, {
+        method: "PATCH",
+      })
+      await fetchApplications()
+    } catch (error) {
+      console.error("Failed to reject application", error)
+    } finally {
+      setLoadingReject(null)
+    }
   }
 
   const closeModal = () => {
@@ -102,7 +117,9 @@ export default function ReviewApplicationsClientPage() {
               applications={appliedApplications}
               onScheduleClick={handleScheduleClick}
               onHireClick={handleHireClick}
+              onRejectClick={handleRejectClick}
               loadingHire={loadingHire}
+              loadingReject={loadingReject}
             />
           </TabsContent>
 
@@ -111,7 +128,9 @@ export default function ReviewApplicationsClientPage() {
               applications={interviewApplications}
               onScheduleClick={handleScheduleClick}
               onHireClick={handleHireClick}
+              onRejectClick={handleRejectClick}
               loadingHire={loadingHire}
+              loadingReject={loadingReject}
             />
           </TabsContent>
 
@@ -140,12 +159,16 @@ function ApplicationList({
   applications,
   onScheduleClick,
   onHireClick,
+  onRejectClick,
   loadingHire,
+  loadingReject,
 }: {
   applications: any[]
   onScheduleClick?: (id: string) => void
   onHireClick?: (id: string) => void
+  onRejectClick?: (id: string) => void
   loadingHire?: string | null
+  loadingReject?: string | null
 }) {
   if (applications.length === 0) {
     return (
@@ -164,7 +187,9 @@ function ApplicationList({
           application={app}
           onScheduleClick={onScheduleClick}
           onHireClick={onHireClick}
+          onRejectClick={onRejectClick}
           loadingHire={loadingHire}
+          loadingReject={loadingReject}
         />
       ))}
     </div>
@@ -175,12 +200,16 @@ function ApplicationCard({
   application,
   onScheduleClick,
   onHireClick,
+  onRejectClick,
   loadingHire,
+  loadingReject,
 }: {
   application: any
   onScheduleClick?: (id: string) => void
   onHireClick?: (id: string) => void
+  onRejectClick?: (id: string) => void
   loadingHire?: string | null
+  loadingReject?: string | null
 }) {
   return (
     <Card>
@@ -281,7 +310,7 @@ function ApplicationCard({
           </Button>
         </Link>
 
-        {onScheduleClick && (
+        {["applied", "interview"].includes(application.status) && onScheduleClick && (
           <Button
             variant="secondary"
             size="sm"
@@ -293,15 +322,29 @@ function ApplicationCard({
           </Button>
         )}
 
-        {application.status === "applied" && onHireClick && (
+        {["applied", "interview"].includes(application.status) && onHireClick && (
           <Button
-            variant="outline"
+            variant="default"
             size="sm"
             className="w-full gap-1"
-            onClick={() => onHireClick(application._id)}
             disabled={loadingHire === application._id}
+            onClick={() => onHireClick(application._id)}
           >
+            <CheckCircle className="h-4 w-4" />
             {loadingHire === application._id ? "Hiring..." : "Hire"}
+          </Button>
+        )}
+
+        {["applied", "interview"].includes(application.status) && onRejectClick && (
+          <Button
+            variant="destructive"
+            size="sm"
+            className="w-full gap-1"
+            disabled={loadingReject === application._id}
+            onClick={() => onRejectClick(application._id)}
+          >
+            <XCircle className="h-4 w-4" />
+            {loadingReject === application._id ? "Rejecting..." : "Reject"}
           </Button>
         )}
       </CardFooter>

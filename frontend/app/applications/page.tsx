@@ -211,11 +211,11 @@ export default function ApplicationsPage() {
                           </CardDescription>
                         </div>
                         <Badge
-                        variant={application.status === "hired" ? "outline" : "destructive"}
-                       className={application.status === "hired" ? "bg-green-500 text-white" : ""}
-                      >
-                      {application.status === "hired" ? "Hired" : "Rejected"}
-                      </Badge>
+                          variant={application.status === "hired" ? "outline" : "destructive"}
+                          className={application.status === "hired" ? "bg-green-500 text-white" : ""}
+                        >
+                          {application.status === "hired" ? "Hired" : "Rejected"}
+                        </Badge>
                       </div>
                     </CardHeader>
                     <CardContent className="pb-2">
@@ -233,8 +233,8 @@ export default function ApplicationsPage() {
                           <span>Applied on {application.appliedAt}</span>
                         </div>
                         {application.status === "hired" && application.startDate && (
-                          <div className="flex items-center gap-1 text-sm font-medium text-green-600 dark:text-green-500">
-                            <CheckCircle className="h-3 w-3" />
+                          <div className="flex justify-center items-center bg-green-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg text-center">
+                            <CheckCircle className="h-4 w-4 mr-2" />
                             <span>Start date: {application.startDate}</span>
                           </div>
                         )}
@@ -253,6 +253,11 @@ export default function ApplicationsPage() {
                             View Gig
                           </Button>
                         </Link>
+                        <Button variant="default" size="sm" className="flex-1 gap-1">
+                        <MessageCircle className="h-4 w-4" />
+                        Message
+                        </Button>
+
                       </div>
                     </CardFooter>
                   </Card>

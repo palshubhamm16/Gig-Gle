@@ -188,3 +188,26 @@ export const getGigApplications = async (req: Request, res: Response): Promise<v
     }
   };
   
+
+  // reject applicant
+  // reject applicant
+  export const rejectApplicant = async (req: Request, res: Response): Promise<void> => {
+    const { applicationId } = req.params;
+    try {
+      const application = await Application.findById(applicationId);
+  
+      if (!application) {
+        res.status(404).json({ error: "Application not found" });
+        return; // Exit early after sending the response
+      }
+  
+      application.status = "rejected";
+      await application.save();
+  
+      res.status(200).json({ message: "Application rejected successfully" });
+    } catch (error) {
+      console.error("Error rejecting application:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  };
+  
