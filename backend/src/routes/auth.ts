@@ -1,4 +1,4 @@
-import { Request, Response, Router } from "express";
+/*import { Request, Response, Router } from "express";
 import Admin from "../models/admin";
 
 const router = Router();
@@ -43,3 +43,4 @@ router.get("/debug-admins", async (_req: Request, res: Response) => {
 });
 
 export default router;
+*/

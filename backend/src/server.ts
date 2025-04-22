@@ -11,6 +11,7 @@ import gigsRoute from "./routes/gigsroute";
 import applicationRoute from "./routes/applicationroute";
 import participantRoute from "./routes/participantRoute";  // New route for participant
 import userRoutes from "./routes/user"
+import messageRoutes from "./routes/message"; // New route for messages
 
 
 
@@ -36,7 +37,7 @@ app.use("/api", gigsRoute); // Now "/api/gigs" is accessible
 app.use("/api/applications", applicationRoute); // Applications route
 app.use("/api/participants", participantRoute); // New route for participant creation and retrieval
 app.use("/api/users", userRoutes)
-
+app.use("/api/messages", messageRoutes); // New route for messages
 
 // 🌱 MongoDB connection
 const mongoURI = process.env.MONGO_URI;

@@ -12,98 +12,119 @@ interface ChatInterfaceProps {
   conversationId: string
 }
 
+const fetchMessages = async (conversationId: string) => {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/messages/${conversationId}`)
+  const data = await res.json()
+  return data.messages
+}
+
+const postMessage = async (conversationId: string, senderId: string, content: string) => {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/messages`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ conversationId, senderId, content }),
+  })
+
+  if (!res.ok) throw new Error("Failed to send message")
+
+  const message = await res.json()
+  return message
+}
+
 const fetchConversations = async (userId: string) => {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/participants/conversations/${userId}`)
-
-    if (!res.ok) {
-      const errorText = await res.text()
-      console.error("Failed to fetch conversations. Response:", errorText)
-      throw new Error("Failed to fetch conversations")
-    }
-
-    const data = await res.json()
-    return data.conversations
-  } catch (error) {
-    console.error("Error fetching conversations:", error)
-    throw error
-  }
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/participants/conversations/${userId}`)
+  const data = await res.json()
+  return data.conversations
 }
 
 const fetchUserInfo = async (userId: string) => {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`)
-    if (!res.ok) throw new Error("Failed to fetch user info")
-
-    const user = await res.json()
-    return {
-      username: user.firstName || "Unknown",
-      avatar: user.imageUrl || "/placeholder.svg",
-    }
-  } catch (error) {
-    console.error("Error fetching user info:", error)
-    return { username: "Unknown", avatar: "/placeholder.svg" }
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`)
+  const user = await res.json()
+  return {
+    username: user.firstName || "Unknown",
+    avatar: user.imageUrl || "/placeholder.svg",
   }
 }
 
-
 export function ChatInterface({ conversationId }: ChatInterfaceProps) {
   const { user } = useUser()
-  const clerk = useClerk()  // Access Clerk client instance using the hook
-  const [conversations, setConversations] = useState<
-    { id: string; avatar?: string; name?: string; company?: string; role?: string; timestamp?: string; type?: string; gigTitle?: string; lastMessage?: string; unread?: boolean }[]
-  >([])
-  const [activeConversation, setActiveConversation] = useState<typeof conversations[number] | null>(null)
+  const clerk = useClerk()
+  const [conversations, setConversations] = useState<any[]>([])
+  const [activeConversation, setActiveConversation] = useState<any>(null)
   const [messages, setMessages] = useState<any[]>([])
   const [newMessage, setNewMessage] = useState("")
 
+  // Load conversations and set active
   useEffect(() => {
     if (!user || !clerk) return
 
     fetchConversations(user.id).then(async (convos) => {
       const formatted = await Promise.all(
         convos.map(async (c: any) => {
-          const other = c.participants.find((p: any) => p.userId !== user.id)  // Find the other participant
+          const other = c.participants.find((p: any) => p.userId !== user.id)
           if (other) {
-            const userInfo = await fetchUserInfo(other.userId);  // Fetch user info
+            const userInfo = await fetchUserInfo(other.userId)
             return {
               id: c._id,
-              name: userInfo.username,  // Use the fetched username
-              avatar: userInfo.avatar,  // Use the fetched avatar
-              lastMessage: c.lastMessage,  // Add any other fields like lastMessage if needed
-            };
+              name: userInfo.username,
+              avatar: userInfo.avatar,
+              lastMessage: c.lastMessage,
+            }
           }
-          return {};
+          return {}
         })
-      );
+      )
 
-      setConversations(formatted);
-      const convo = formatted.find((c) => c.id === conversationId);
-      setActiveConversation(convo || formatted[0]);
+      setConversations(formatted)
+      const convo = formatted.find((c) => c.id === conversationId)
+      setActiveConversation(convo || formatted[0])
     })
-  }, [user, conversationId, clerk]);  // Ensure Clerk and user are included as dependencies
+  }, [user, conversationId, clerk])
 
+  // Load messages when active conversation changes
   useEffect(() => {
     if (!activeConversation) return
 
-  }, [activeConversation])
+    fetchMessages(activeConversation.id).then((msgs) => {
+      const formatted = msgs.map((m: any) => ({
+        id: m._id,
+        content: m.content,
+        timestamp: new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        isUser: m.senderId === user?.id,
+      }))
+      setMessages(formatted)
+    })
+  }, [activeConversation, user])
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newMessage.trim()) return
+    if (!newMessage.trim() || !activeConversation || !user) return
 
-    const message = {
-      id: messages.length + 1,
-      sender: "You",
+    const tempMessage = {
+      id: `temp-${Date.now()}`,
       content: newMessage,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       isUser: true,
     }
 
-    setMessages((prev) => [...prev, message])
+    setMessages((prev) => [...prev, tempMessage])
     setNewMessage("")
 
-    // Optionally send message to backend
+    try {
+      const saved = await postMessage(activeConversation.id, user.id, newMessage)
+      setMessages((prev) =>
+        prev.map((msg) => (msg.id === tempMessage.id ? {
+          id: saved._id,
+          content: saved.content,
+          timestamp: new Date(saved.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          isUser: true,
+        } : msg))
+      )
+    } catch (err) {
+      console.error("Failed to send message:", err)
+    }
   }
 
   return (
@@ -111,9 +132,7 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
       {/* Conversations List */}
       <Card className="h-full overflow-hidden">
         <CardHeader className="p-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">Conversations</CardTitle>
-          </div>
+          <CardTitle className="text-lg">Conversations</CardTitle>
         </CardHeader>
         <CardContent className="p-0 overflow-auto h-[calc(100%-60px)]">
           <div className="space-y-1">
@@ -134,18 +153,8 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
                     <AvatarFallback>{conversation.name?.charAt(0) ?? "?"}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 overflow-hidden">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-medium truncate">{conversation.name ?? "Unknown"}</h3>
-                    </div>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {conversation.type === "employer"
-                        ? `${conversation.company} • ${conversation.role}`
-                        : `Re: ${conversation.gigTitle}`}
-                    </p>
-                    <div className="flex items-center justify-between mt-1">
-                      <p className="text-sm truncate">{conversation.lastMessage}</p>
-                      {conversation.unread && <span className="flex-shrink-0 h-2 w-2 rounded-full bg-primary" />}
-                    </div>
+                    <h3 className="font-medium truncate">{conversation.name ?? "Unknown"}</h3>
+                    <p className="text-sm truncate">{conversation.lastMessage}</p>
                   </div>
                 </div>
               </button>
@@ -163,14 +172,12 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
                 <AvatarImage src={activeConversation?.avatar || "/placeholder.svg"} alt={activeConversation?.name ?? "User"} />
                 <AvatarFallback>{activeConversation?.name?.charAt(0) ?? "?"}</AvatarFallback>
               </Avatar>
-              <div>
-                <CardTitle className="text-lg">{activeConversation?.name ?? "Unknown"}</CardTitle>
-              </div>
+              <CardTitle className="text-lg">{activeConversation?.name ?? "Unknown"}</CardTitle>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="h-8 w-8"><Phone className="h-4 w-4" /></Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8"><Video className="h-4 w-4" /></Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8"><Info className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon"><Phone className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon"><Video className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon"><Info className="h-4 w-4" /></Button>
             </div>
           </div>
         </CardHeader>
@@ -178,12 +185,10 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
           {messages.map((message) => (
             <div key={message.id} className={`flex ${message.isUser ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[80%] ${message.isUser ? "bg-primary text-primary-foreground" : "bg-muted"} rounded-lg p-3`}>
-                <div className="flex flex-col">
-                  <p>{message.content}</p>
-                  <span className={`text-xs mt-1 ${message.isUser ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                    {message.timestamp}
-                  </span>
-                </div>
+                <p>{message.content}</p>
+                <span className={`text-xs mt-1 ${message.isUser ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                  {message.timestamp}
+                </span>
               </div>
             </div>
           ))}

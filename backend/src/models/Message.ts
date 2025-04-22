@@ -4,9 +4,7 @@ const MessageSchema = new Schema(
   {
     conversationId: { type: Schema.Types.ObjectId, ref: "Conversation", required: true },
     senderId: { type: String, required: true },
-    content: { type: String, required: true },
-    isRead: { type: Boolean, default: false },
-  },
+    content: { type: String, required: true },  },
   { timestamps: true }
 )
 
