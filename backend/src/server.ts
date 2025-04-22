@@ -5,12 +5,11 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 
-//import authRoutes from "./routes/auth";
+// Import Routes
 import uploadRoutes from "./routes/upload"; // ✅ Cloudinary uploads
-import gigsRoute from "./routes/gigsroute"
-import applicationRoute from "./routes/applicationroute"
-
-
+import gigsRoute from "./routes/gigsroute";
+import applicationRoute from "./routes/applicationroute";
+import participantRoute from "./routes/participantRoute";  // New route for participant
 
 const app = express();
 
@@ -29,13 +28,10 @@ app.use(cors());
 app.use(express.json()); // for JSON bodies
 
 // 🔌 Routes
-//app.use("/api/auth", authRoutes);
 app.use("/api/upload", uploadRoutes);
-app.use("/api", gigsRoute) // Now "/api/gigs" is accessible
-app.use("/api/applications", applicationRoute)
-
-
-
+app.use("/api", gigsRoute); // Now "/api/gigs" is accessible
+app.use("/api/applications", applicationRoute); // Applications route
+app.use("/api/participants", participantRoute); // New route for participant creation and retrieval
 
 // 🌱 MongoDB connection
 const mongoURI = process.env.MONGO_URI;

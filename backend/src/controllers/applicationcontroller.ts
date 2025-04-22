@@ -68,24 +68,28 @@ export const createApplication = async (req: Request, res: Response): Promise<vo
 //get applications by you
 
 export const getUserApplications = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const userId = req.headers["user-id"]
-  
-      if (!userId) {
-        res.status(401).json({ error: "Unauthorized: Missing user ID" })
-        return
-      }
-  
-      const applications = await Application.find({ seeker: userId })
-        .populate("gig") // optionally populate gig details
-        .sort({ appliedAt: -1 })
-  
-      res.status(200).json(applications)
-    } catch (error) {
-      console.error("Error fetching user's applications:", error)
-      res.status(500).json({ error: "Error fetching user's applications" })
+  try {
+    const userId = req.headers["user-id"]
+
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized: Missing user ID" })
+      return
     }
+
+    const applications = await Application.find({ seeker: userId })
+      .populate({
+        path: "gig",
+        select: "title company city state country type userId", // Make sure userId is included
+      })
+      .sort({ appliedAt: -1 })
+
+    res.status(200).json(applications)
+  } catch (error) {
+    console.error("Error fetching user's applications:", error)
+    res.status(500).json({ error: "Error fetching user's applications" })
   }
+}
+
 
 
   //get gigapplications

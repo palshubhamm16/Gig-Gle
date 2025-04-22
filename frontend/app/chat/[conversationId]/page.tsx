@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { currentUser } from "@clerk/nextjs/server"
 import { ChatInterface } from "@/components/chat-interface"
@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   description: "Chat with employers and other users on Gig-gle",
 }
 
+// Ensure ChatPage is a valid React Component and uses async/await correctly for server-side logic
 export default async function ChatPage() {
   const user = await currentUser()
 
@@ -23,6 +24,7 @@ export default async function ChatPage() {
         <p className="text-muted-foreground">Chat with employers and other users</p>
       </div>
 
+      {/* Pass the conversationId dynamically or statically */}
       <ChatInterface conversationId="default-conversation-id" />
     </div>
   )
