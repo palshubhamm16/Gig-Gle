@@ -66,7 +66,8 @@ export const createOrGetConversation = async ({
 };
 
 
-  //get conversations by userId
+
+// GET /conversations/:userId
 export const getUserConversationsHandler = async (
   req: Request<{ userId: string }>,
   res: Response,
@@ -80,25 +81,41 @@ export const getUserConversationsHandler = async (
       return;
     }
 
-    const participants = await Participant.find({ userId }).populate({
-      path: "conversationId",
-      populate: {
-        path: "participants",
-        model: "Participant",
-      },
+    const participants = await Participant.find({ userId })
+      .populate({
+        path: "conversationId",
+        populate: {
+          path: "participants",
+          model: "Participant",
+        },
+      })
+      .sort({ createdAt: -1 }); // Optional: newest first
+
+    // Remove potential duplicates by using a Map
+    const conversationMap = new Map<string, any>();
+
+    participants.forEach((p) => {
+      const conv = p.conversationId as any;
+
+      if (!conv || !conv._id) return;
+
+      const convIdStr = conv._id.toString();
+
+      if (!conversationMap.has(convIdStr)) {
+        conversationMap.set(convIdStr, {
+          _id: conv._id,
+          gigId: conv.gigId,
+          participants: conv.participants,
+        });
+      }
     });
 
-    const conversations = participants.map((p) => {
-      const conversation = p.conversationId as any;
-      return {
-        _id: conversation._id,
-        gigId: conversation.gigId,
-        participants: conversation.participants,
-      };
-    });
+    const conversations = Array.from(conversationMap.values());
 
     res.status(200).json({ conversations });
   } catch (error) {
+    console.error("Error in getUserConversationsHandler:", error);
     next(error);
   }
 };
+

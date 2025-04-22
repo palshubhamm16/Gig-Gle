@@ -1,8 +1,7 @@
 "use client"
 
-import type React from "react"
 import { useEffect, useState } from "react"
-import { useUser } from "@clerk/nextjs"
+import { useUser, useClerk } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -16,9 +15,6 @@ interface ChatInterfaceProps {
 const fetchConversations = async (userId: string) => {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/participants/conversations/${userId}`)
-
-    const contentType = res.headers.get("Content-Type")
-    console.log("Response content type:", contentType)
 
     if (!res.ok) {
       const errorText = await res.text()
@@ -34,20 +30,26 @@ const fetchConversations = async (userId: string) => {
   }
 }
 
-const fetchMessages = async (conversationId: string) => {
+const fetchUserInfo = async (userId: string) => {
   try {
-    const res = await fetch(`/api/conversations/${conversationId}/messages`)
-    if (!res.ok) throw new Error("Failed to fetch messages")
-    const data = await res.json()
-    return data.messages
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`)
+    if (!res.ok) throw new Error("Failed to fetch user info")
+
+    const user = await res.json()
+    return {
+      username: user.firstName || "Unknown",
+      avatar: user.imageUrl || "/placeholder.svg",
+    }
   } catch (error) {
-    console.error("Error fetching messages:", error)
-    return []
+    console.error("Error fetching user info:", error)
+    return { username: "Unknown", avatar: "/placeholder.svg" }
   }
 }
 
+
 export function ChatInterface({ conversationId }: ChatInterfaceProps) {
   const { user } = useUser()
+  const clerk = useClerk()  // Access Clerk client instance using the hook
   const [conversations, setConversations] = useState<
     { id: string; avatar?: string; name?: string; company?: string; role?: string; timestamp?: string; type?: string; gigTitle?: string; lastMessage?: string; unread?: boolean }[]
   >([])
@@ -56,22 +58,34 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
   const [newMessage, setNewMessage] = useState("")
 
   useEffect(() => {
-    if (!user) return
+    if (!user || !clerk) return
 
-    fetchConversations(user.id).then((convos) => {
-      const validConvos = convos.filter((c: any) => c && typeof c.name === "string")
-      setConversations(validConvos)
-      const convo = validConvos.find((c: { id: string }) => c.id === conversationId)
-      setActiveConversation(convo || validConvos[0])
+    fetchConversations(user.id).then(async (convos) => {
+      const formatted = await Promise.all(
+        convos.map(async (c: any) => {
+          const other = c.participants.find((p: any) => p.userId !== user.id)  // Find the other participant
+          if (other) {
+            const userInfo = await fetchUserInfo(other.userId);  // Fetch user info
+            return {
+              id: c._id,
+              name: userInfo.username,  // Use the fetched username
+              avatar: userInfo.avatar,  // Use the fetched avatar
+              lastMessage: c.lastMessage,  // Add any other fields like lastMessage if needed
+            };
+          }
+          return {};
+        })
+      );
+
+      setConversations(formatted);
+      const convo = formatted.find((c) => c.id === conversationId);
+      setActiveConversation(convo || formatted[0]);
     })
-  }, [user, conversationId])
+  }, [user, conversationId, clerk]);  // Ensure Clerk and user are included as dependencies
 
   useEffect(() => {
     if (!activeConversation) return
 
-    fetchMessages(activeConversation.id).then((msgs) => {
-      setMessages(msgs)
-    })
   }, [activeConversation])
 
   const handleSendMessage = (e: React.FormEvent) => {
@@ -99,11 +113,6 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
         <CardHeader className="p-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">Conversations</CardTitle>
-            <div className="flex gap-1">
-              <Button variant="ghost" size="sm" className="h-8 text-xs">All</Button>
-              <Button variant="ghost" size="sm" className="h-8 text-xs">Employers</Button>
-              <Button variant="ghost" size="sm" className="h-8 text-xs">Applicants</Button>
-            </div>
           </div>
         </CardHeader>
         <CardContent className="p-0 overflow-auto h-[calc(100%-60px)]">
@@ -127,7 +136,6 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
                   <div className="flex-1 overflow-hidden">
                     <div className="flex items-center justify-between">
                       <h3 className="font-medium truncate">{conversation.name ?? "Unknown"}</h3>
-                      <span className="text-xs text-muted-foreground">{conversation.timestamp}</span>
                     </div>
                     <p className="text-xs text-muted-foreground truncate">
                       {conversation.type === "employer"
@@ -157,9 +165,6 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
               </Avatar>
               <div>
                 <CardTitle className="text-lg">{activeConversation?.name ?? "Unknown"}</CardTitle>
-                <p className="text-xs text-muted-foreground">
-                  {activeConversation?.company} • {activeConversation?.role}
-                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -191,7 +196,7 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
               onChange={(e) => setNewMessage(e.target.value)}
               className="flex-1"
             />
-            <Button type="submit" size="icon"><Send className="h-4 w-4" /><span className="sr-only">Send</span></Button>
+            <Button type="submit" size="icon"><Send className="h-4 w-4" /></Button>
           </form>
         </CardFooter>
       </Card>
