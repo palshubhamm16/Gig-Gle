@@ -1,59 +1,50 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Briefcase, MapPin, Clock, Building } from "lucide-react"
 
-// Mock data for featured gigs
-const featuredGigs = [
-  {
-    id: 1,
-    title: "Web Design Assistant",
-    company: "Creative Solutions",
-    location: "Remote",
-    type: "Part-time",
-    category: "Technology",
-    postedAt: "2 days ago",
-    description: "Help design and update websites for our clients. Flexible hours and mentorship provided.",
-  },
-  {
-    id: 2,
-    title: "Social Media Intern",
-    company: "Marketing Minds",
-    location: "Hybrid - New York",
-    type: "Internship",
-    category: "Marketing",
-    postedAt: "3 days ago",
-    description: "Create engaging content for various social media platforms. Learn valuable marketing skills.",
-  },
-  {
-    id: 3,
-    title: "Data Entry Specialist",
-    company: "DataFlow Inc",
-    location: "Remote",
-    type: "Freelance",
-    category: "Administrative",
-    postedAt: "1 day ago",
-    description: "Input and organize data for our growing company. Work at your own pace.",
-  },
-  {
-    id: 4,
-    title: "Customer Support Representative",
-    company: "TechHelp",
-    location: "Remote",
-    type: "Part-time",
-    category: "Customer Service",
-    postedAt: "5 days ago",
-    description: "Provide excellent customer service via email and chat. Training provided.",
-  },
-]
+interface Gig {
+  _id: string
+  title: string
+  company: string
+  location: string
+  type: string
+  category: string
+  description: string
+  createdAt: string
+}
 
 export function FeaturedGigs() {
+  const [featuredGigs, setFeaturedGigs] = useState<Gig[] | null>(null)
+
+  useEffect(() => {
+    const fetchGigs = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/gigs/featured`)
+        const data = await res.json()
+        setFeaturedGigs(data.gigs)
+      } catch (error) {
+        console.error("Error fetching featured gigs:", error)
+        setFeaturedGigs([])
+      }
+    }
+
+    fetchGigs()
+  }, [])
+
+  if (!featuredGigs) {
+    return <p>Loading featured gigs...</p>
+  }
+
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
       {featuredGigs.map((gig) => (
         <Card
-          key={gig.id}
+          key={gig._id}
           className="flex flex-col h-full transition-all hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800"
         >
           <CardContent className="flex-1 pt-6">
@@ -66,8 +57,8 @@ export function FeaturedGigs() {
                 </div>
               </div>
               <Badge
-                variant={gig.type === "Part-time" ? "default" : gig.type === "Internship" ? "secondary" : "outline"}
-                className={gig.type === "Part-time" ? "bg-blue-600 hover:bg-blue-700" : ""}
+                variant={gig.type === "part-time" ? "default" : gig.type === "internship" ? "secondary" : "outline"}
+                className={gig.type === "part-time" ? "bg-blue-600 hover:bg-blue-700" : ""}
               >
                 {gig.type}
               </Badge>
@@ -79,7 +70,7 @@ export function FeaturedGigs() {
               </div>
               <div className="flex items-center gap-1 text-muted-foreground text-sm">
                 <Clock className="h-3 w-3" />
-                <span>Posted {gig.postedAt}</span>
+                <span>Posted {new Date(gig.createdAt).toLocaleDateString()}</span>
               </div>
               <div className="flex items-center gap-1 text-muted-foreground text-sm">
                 <Briefcase className="h-3 w-3" />
@@ -89,7 +80,7 @@ export function FeaturedGigs() {
             <p className="text-sm text-muted-foreground line-clamp-3">{gig.description}</p>
           </CardContent>
           <CardFooter className="pt-2">
-            <Link href={`/gigs/${gig.id}`} className="w-full">
+            <Link href={`/gigs/${gig._id}`} className="w-full">
               <Button
                 variant="outline"
                 className="w-full hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 dark:hover:border-blue-800"

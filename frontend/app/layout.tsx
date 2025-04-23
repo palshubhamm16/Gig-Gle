@@ -38,9 +38,6 @@ export default function RootLayout({
                     <a href="/accessibility" className="text-sm text-muted-foreground hover:underline">
                       Accessibility
                     </a>
-                    <a href="/privacy" className="text-sm text-muted-foreground hover:underline">
-                      Privacy
-                    </a>
                     <a href="/terms" className="text-sm text-muted-foreground hover:underline">
                       Terms
                     </a>

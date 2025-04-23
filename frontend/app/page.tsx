@@ -117,42 +117,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Search Section - Updated with blue accents */}
-      <section className="container px-4 md:px-6 py-10">
-        <div className="mx-auto max-w-5xl">
-          <div className="mb-8 text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
-              Find Your Next Opportunity
-            </h2>
-            <p className="mt-2 text-muted-foreground">
-              Search through hundreds of inclusive gigs tailored to your skills and needs
-            </p>
-          </div>
-
-          <div className="rounded-xl border bg-card p-6 shadow-sm">
-            <div className="grid gap-4 md:grid-cols-4">
-              <div className="md:col-span-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input type="search" placeholder="Search for gigs..." className="w-full bg-background pl-9" />
-                </div>
-              </div>
-              <div>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input type="text" placeholder="Location" className="w-full bg-background pl-9" />
-                </div>
-              </div>
-              <div>
-                <Button className="w-full gap-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500">
-                  <Filter className="h-4 w-4" />
-                  Filter Results
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+ 
 
       {/* Featured Gigs - Updated with new styling */}
       <section className="container px-4 md:px-6 py-10">
@@ -200,7 +165,7 @@ export default function Home() {
                     <h3 className="font-semibold group-hover:text-blue-600 dark:group-hover:text-blue-400">
                       {category.name}
                     </h3>
-                    <p className="text-sm text-muted-foreground">{category.count} gigs available</p>
+                    <p className="text-sm text-muted-foreground"></p>
                   </CardContent>
                 </Card>
               </Link>

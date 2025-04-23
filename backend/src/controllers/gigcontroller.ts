@@ -200,3 +200,22 @@ export const getFilteredGigs = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Server error" });
   }
 };
+
+
+
+//randomgig
+
+
+
+// controllers/gig.ts
+
+export const getRandomFeaturedGigs = async (req: Request, res: Response) => {
+  try {
+    const gigs = await Gig.aggregate([{ $sample: { size: 4 } }])
+    res.status(200).json({ gigs })
+  } catch (error) {
+    console.error("Failed to fetch featured gigs:", error)
+    res.status(500).json({ message: "Internal server error" })
+  }
+}
+
